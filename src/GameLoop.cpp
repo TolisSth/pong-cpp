@@ -32,7 +32,7 @@ void GameLoop::paintEvent(QPaintEvent *E){
 
     ball.drawRect(ballX, ballY, ballSize, ballSize);
     playerOne.drawRect(10, playerOneY, 30, 100);
-    playerTwo.drawRect(width() - 40, 155, 30, 100);
+    playerTwo.drawRect(width() - 40, playerTwoY, 30, 100);
 }
 
 void GameLoop::keyPressEvent(QKeyEvent *event) {
@@ -49,6 +49,18 @@ void GameLoop::keyPressEvent(QKeyEvent *event) {
         if (playerOneY > maxY) playerOneY = maxY;
         update(); // Trigger a repaint
     }
+    else if (event->key() == Qt::Key_W) {
+        playerTwoY -= 10; // Adjust the movement speed as needed
+        if (playerTwoY < 0) playerTwoY = 0; // Limit movement within the widget
+        update();
+    }
+    else if (event->key() == Qt::Key_S) {
+        playerTwoY += 10; // Adjust the movement speed as needed
+        int maxY = height() - 100; // The maximum Y position to ensure the rectangle stays within the widget
+        if (playerTwoY > maxY) playerTwoY = maxY;
+        update();
+    }
+
 }
 
 void GameLoop::updateGame() {
