@@ -1,6 +1,8 @@
 #include "aux.h"
 #include <QPainter>
 #include <QKeyEvent>
+#include <QTimer>
+#include <QDateTime>
 
 GameLoop::GameLoop(){
 
@@ -9,6 +11,9 @@ GameLoop::GameLoop(){
 void GameLoop::paintEvent(QPaintEvent *E){
     QPainter playerOne(this);
     QPainter playerTwo(this);
+    QPainter ball(this);
+
+    ball.setBrush(Qt::white);
 
     playerOne.setPen(QPen(Qt::black, 1));
     playerOne.setBrush(Qt::white);
@@ -16,6 +21,16 @@ void GameLoop::paintEvent(QPaintEvent *E){
     playerTwo.setPen(QPen(Qt::black, 1));
     playerTwo.setBrush(Qt::white);
 
+    // Create a QTimer object
+    QTimer *timer = new QTimer(this);
+
+    // Connect the timeout() signal of the QTimer to the updateGame() slot
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateGame()));
+
+    // Start the timer to trigger updates approximately every 16 milliseconds (roughly 60 FPS)
+    timer->start(500);
+
+    ball.drawRect(ballX, ballY, ballSize, ballSize);
     playerOne.drawRect(10, playerOneY, 30, 100);
     playerTwo.drawRect(width() - 40, 155, 30, 100);
 }
@@ -35,3 +50,37 @@ void GameLoop::keyPressEvent(QKeyEvent *event) {
         update(); // Trigger a repaint
     }
 }
+
+void GameLoop::updateGame() {
+    static qint64 lastUpdateTime = QDateTime::currentMSecsSinceEpoch();
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+    qreal deltaTime = (currentTime - lastUpdateTime) / 1000.0; // Convert milliseconds to seconds
+    lastUpdateTime = currentTime;
+
+    // Move the ball horizontally
+    ballX += ballSpeedX * deltaTime;
+
+    // Check for collisions with the horizontal walls
+    if (ballX <= 0 || ballX >= width() - ballSize) {
+        ballSpeedX = -ballSpeedX; // Reverse the horizontal direction
+    }
+
+    // Move the ball vertically
+    ballY += ballSpeedY * deltaTime;
+
+    // Check for collisions with the vertical walls
+    if (ballY <= 0 || ballY >= height() - ballSize) {
+        ballSpeedY = -ballSpeedY; // Reverse the vertical direction
+    }
+
+    // Check for collisions with players
+    if (ballX <= 40 && ballY >= playerOneY && ballY <= playerOneY + 100) {
+        ballSpeedX = -ballSpeedX; // Reverse the horizontal direction
+    }
+    else if (ballX >= width() - 70 && ballY >= playerTwoY && ballY <= playerTwoY + 100) {
+        ballSpeedX = -ballSpeedX; // Reverse the horizontal direction
+    }
+
+    update(); // Trigger a repaint
+}
+
